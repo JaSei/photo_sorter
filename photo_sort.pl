@@ -9,8 +9,9 @@ use Time::Piece;
 use Image::EXIF::DateTime::Parser;
 
 my $kingpin = Getopt::Kingpin->new();
-my $src = $kingpin->arg("src", "source dir of photo")->required->existing_dir();
-my $dst = $kingpin->arg("dst", "destination dir of sorted photo")->required->existing_dir();
+my $src = $kingpin->arg('src', 'source dir of photo')->required->existing_dir();
+my $dst = $kingpin->arg('dst', 'destination dir of sorted photo')->required->existing_dir();
+my $dry_run = $kingpin->flag('dry', 'dry run - only print from to')->bool();
 $kingpin->parse();
 
 my $exifTool = Image::ExifTool->new();
@@ -47,8 +48,10 @@ $src->value->visit(
 
             my $dst_path = path($dst, $type, $mtime->year, sprintf("%02d", $mtime->mon), $filename);
             print "$path -> $dst_path\n";
-            $dst_path->parent->mkpath();
-            $path->copy($dst_path);
+            if (!$dry_run) {
+                $dst_path->parent->mkpath();
+                $path->copy($dst_path);
+            }
         }
     },
     {recurse => 1}
