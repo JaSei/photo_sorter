@@ -16,6 +16,7 @@ $kingpin->parse();
 
 my $exifTool = Image::ExifTool->new();
 
+my %stats;
 $src->value->visit(
     sub {
         my ($path) = @_;
@@ -46,13 +47,31 @@ $src->value->visit(
 
             my $filename = sprintf "%02d-%02d%s-%s", $mtime->mday, $mtime->hour, $orientation, $path->basename();
 
+            $stats{found}{size} += -s $path;
+            $stats{found}{count}++;
+
             my $dst_path = path($dst, $type, $mtime->year, sprintf("%02d", $mtime->mon), $filename);
             print "$path -> $dst_path\n";
             if (!$dry_run) {
                 $dst_path->parent->mkpath();
                 $path->copy($dst_path);
+                $stats{copied}{size} += -s $dst_path;
+                $stats{copied}{count}++;
             }
         }
     },
     {recurse => 1}
 );
+
+print Dumper \%stats;
+
+if (!$dry_run ) {
+    if ($stats{found}{count} == $stats{copied}{count} && $stats{found}{size} == $stats{copied}{size}) {
+        print "Copy done\n";
+        exit 0;
+    }
+    else {
+        print "Copy problem\n";
+        exit 1;
+    }
+}
