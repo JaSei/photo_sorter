@@ -1,17 +1,21 @@
 use strict;
 use warnings;
 
+use autodie;
+
 use Path::Tiny;
 use Image::ExifTool;
 use Getopt::Kingpin;
 use Data::Dumper;
 use Time::Piece;
 use Image::EXIF::DateTime::Parser;
+use Try::Tiny;
 
 my $kingpin = Getopt::Kingpin->new();
 my $src = $kingpin->arg('src', 'source dir of photo')->required->existing_dir();
 my $dst = $kingpin->arg('dst', 'destination dir of sorted photo')->required->existing_dir();
 my $dry_run = $kingpin->flag('dry', 'dry run - only print from to')->bool();
+my $link = $kingpin->flag('link', 'use hard link instead of copy')->bool();
 $kingpin->parse();
 
 my $exifTool = Image::ExifTool->new();
@@ -52,12 +56,25 @@ $src->value->visit(
 
             my $dst_path = path($dst, $type, $mtime->year, sprintf("%02d", $mtime->mon), $filename);
             print "$path -> $dst_path\n";
-            if (!$dry_run) {
+            if ($dry_run) {
+            }
+            elsif ($link) {
+                $dst_path->parent->mkpath();
+                try {
+                    link $path, $dst_path;
+                }
+                catch {
+                    if ($_ !~ /File exists/) {
+                        die $_;
+                    }
+                };
+            }
+            else {
                 $dst_path->parent->mkpath();
                 $path->copy($dst_path);
-                $stats{copied}{size} += -s $dst_path;
-                $stats{copied}{count}++;
             }
+            $stats{copied}{size} += -s $dst_path;
+            $stats{copied}{count}++;
         }
     },
     {recurse => 1}
