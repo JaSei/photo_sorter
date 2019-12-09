@@ -8,4 +8,4 @@ mkdir $selected
 
 photo=$1/photo/
 
-./pqiv2.11-1 -1 "mv -t $deleted $FILENAME" -2 "ln -t $selected ${FILENAME}" $photo
+./pqiv2.11-1 -n -1 "mv -t $deleted $FILENAME" -2 "ln -t $selected ${FILENAME}" $photo
