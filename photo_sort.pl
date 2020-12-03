@@ -67,6 +67,10 @@ $src->value->visit(
                     if ($_ !~ /File exists/) {
                         die $_;
                     }
+
+                    #if ($path->digest('MD5') ne $dst_path->digest('MD5')) {
+                    #    die "$path and $dst_path haven't same digest";
+                    #}
                 };
             }
             else {

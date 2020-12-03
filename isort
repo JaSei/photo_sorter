@@ -1,0 +1,15 @@
+#!/bin/bash
+
+deleted=$1/deleted/
+mkdir $deleted
+
+selected=$1/selected/
+mkdir $selected
+
+photo=$1/photo/
+
+feh -F \
+    --info "ls $1/selected/%N" \
+    --action1 "mv -t $deleted %F" \
+    --action2 "ln -t $selected %F" \
+    -r $photo
